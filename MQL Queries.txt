@@ -1,0 +1,208 @@
+import pymongo
+import datetime, pprint
+from pprint import pprint
+from pymongo import MongoClient
+
+
+#### Q.1: Jesus Salomon ####
+
+# Access my database and collection
+db = client['sample_airbnb']
+collection = db['listingsAndReviews']
+
+# Query1
+query1 = {
+    "$or": [
+        { "amenities": "Garden" },
+        {
+            "$and": [
+                { "amenities": "Fire extinguisher" },
+                { "amenities": "Smoke detector" }
+            ]
+        }
+    ]
+}
+
+# Define my projection 📖
+projection = {
+    "_id": 1,
+    "name": 1,
+    "property_type": 1,
+    "beds": 1
+}
+
+# Execute the query with sorting and limiting 🤔
+results = collection.find(query1, projection).sort("beds", -1).limit(10)
+
+# Print the results aka we done! 🥳
+print("Query1 results:")
+for document in results:
+    print(document)
+
+
+#### Q.2: Jesus Salomon ####
+
+# Access my database and collection
+db = client['sample_airbnb']
+collection = db['listingsAndReviews']
+
+# Define my projection 📖
+projection = {
+    "_id": 1,
+    "name": 1,
+    "price": 1
+}
+
+# Execute the query with sorting and limiting 🤔
+results = collection.find({}, projection).sort("price", -1).limit(5)
+
+# Print the results aka we done! 🥳
+print("Query2 results:")
+for document in results:
+    print(document)
+
+
+#### Q.3: Jesus Salomon ####
+
+# Access my database and collection
+db = client['sample_airbnb']
+collection = db['listingsAndReviews']
+
+# Query3
+query3 = {
+    "$expr": {
+        "$gt": [
+            "$review_scores.review_scores_cleanliness",
+            "$review_scores.review_scores_accuracy"
+        ]
+    }
+}
+
+# Define my projection 📖
+projection = {
+    "_id": 1,
+    "name": 1,
+    "number_of_reviews": 1,
+    "review_scores_cleanliness": "$review_scores.review_scores_cleanliness",
+    "review_scores_accuracy": "$review_scores.review_scores_accuracy"
+}
+
+# Execute the query with sorting and limiting 🤔
+results = collection.find(query3, projection).sort("number_of_reviews", 1).limit(5)
+
+# Print the results aka we done! 🥳
+print("Query results:")
+for document in results:
+    print(document)
+
+
+#### Q.4: Deasy Pasaribu ####
+
+# Access to database and collection
+db = client['sample_airbnb']
+collection = db['listingsAndReviews']
+
+# Define the query
+query4 = {
+    "address.country": "Portugal",
+    "bedrooms": {"$gte": 3},
+}
+
+# Define the projection
+projection = {
+      "_id": 1,
+      "name": 1,
+      "address.country": 1,
+      "review_scores_rating": 1,
+      "bedrooms": 1,
+      "number_of_reviews": 1,
+      "review_scores_rating": "$review_scores.review_scores_rating"
+    }
+
+# Execute the query
+results = list(collection.find(query4, projection).sort("review_scores_rating", -1).sort("number_of_reviews", -1).limit(5))      
+
+# Print the result 
+print("Query 4 Result:")
+if results:
+    for results in results:
+        print(results)
+else:
+    print("No results found.")
+
+
+#### Q.5: Deasy Pasaribu ####
+
+# Access to database and collection
+db = client['sample_airbnb']
+collection = db['listingsAndReviews']
+
+# Define the query
+query5 = {
+    "number_of_reviews": {"$lt": 500},
+    "review_scores_communication": {"$gte": 9}
+}
+
+# Define the projection
+projection = {
+      "_id": 1,
+      "name": 1,
+      "number_of_reviews": 1,
+      "review_scores_communication": 1,
+      "review_scores_checkin": 1
+    }
+
+# Execute the query
+results = list(collection.find(query5, projection).sort("review_scores_checkin", -1).sort("number_of_reviews", -1).limit(5))
+
+# Print the result
+print("Query 5 Result:")
+if results:
+    for results in results:
+        print(results)
+else:
+    print("No results found.")
+
+
+#### Q.6: Deasy Pasaribu ####
+
+# Access to database and collection
+db = client['sample_airbnb']
+collection = db['listingsAndReviews']
+
+# Define the query
+query6 = {
+    "property_type": "House",
+    "bedrooms": {"$gte": 1}
+}
+
+# Define the projection
+projection = {
+    "_id": 1,
+    "host.host_id": 1,
+    "host.host_name": 1,
+    "bedrooms": 1
+}
+
+# Define aggregation pipeline then execute 
+pipeline = [
+    {"$match": query6},
+    {"$group": {
+        "_id": {"host_id": "$host.host_id", "host_name": "$host.host_name"},
+        "total_bedrooms": {"$sum": "$bedrooms"}}},
+    {"$sort": {"total_bedrooms": -1}},
+    {"$limit": 5}
+]
+results = list(collection.aggregate(pipeline))
+
+# Print the result
+print("Query 6 Results:")
+if results:
+    for host in results:
+        print({
+            "host_id": host["_id"]["host_id"],
+            "host_name": host["_id"]["host_name"],
+            "total_bedrooms": host["total_bedrooms"]})
+else:
+    print("No results found.")
+
